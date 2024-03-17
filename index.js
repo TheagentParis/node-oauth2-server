@@ -26,6 +26,7 @@ exports.InvalidGrantError = require('./lib/errors/invalid-grant-error');
 exports.InvalidRequestError = require('./lib/errors/invalid-request-error');
 exports.InvalidScopeError = require('./lib/errors/invalid-scope-error');
 exports.InvalidTokenError = require('./lib/errors/invalid-token-error');
+exports.ExpiredTokenError = require('./lib/errors/expired-token-error');
 exports.OAuthError = require('./lib/errors/oauth-error');
 exports.ServerError = require('./lib/errors/server-error');
 exports.UnauthorizedClientError = require('./lib/errors/unauthorized-client-error');

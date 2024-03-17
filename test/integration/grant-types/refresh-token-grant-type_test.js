@@ -6,6 +6,7 @@
 
 var InvalidArgumentError = require('../../../lib/errors/invalid-argument-error');
 var InvalidGrantError = require('../../../lib/errors/invalid-grant-error');
+var ExpiredTokenError = require('../../../lib/errors/expired-token-error');
 var InvalidRequestError = require('../../../lib/errors/invalid-request-error');
 var Promise = require('bluebird');
 var RefreshTokenGrantType = require('../../../lib/grant-types/refresh-token-grant-type');
@@ -324,7 +325,7 @@ describe('RefreshTokenGrantType integration', function() {
       return grantType.getRefreshToken(request, client)
         .then(should.fail)
         .catch(function(e) {
-          e.should.be.an.instanceOf(InvalidGrantError);
+          e.should.be.an.instanceOf(ExpiredTokenError);
           e.message.should.equal('Invalid grant: refresh token has expired');
         });
     });

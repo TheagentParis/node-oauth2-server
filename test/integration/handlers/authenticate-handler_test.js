@@ -10,6 +10,7 @@ var InvalidArgumentError = require('../../../lib/errors/invalid-argument-error')
 var InvalidRequestError = require('../../../lib/errors/invalid-request-error');
 var InsufficientScopeError = require('../../../lib/errors/insufficient-scope-error');
 var InvalidTokenError = require('../../../lib/errors/invalid-token-error');
+var ExpiredTokenError = require('../../../lib/errors/expired-token-error');
 var Promise = require('bluebird');
 var Request = require('../../../lib/request');
 var Response = require('../../../lib/response');
@@ -436,7 +437,7 @@ describe('AuthenticateHandler integration', function() {
 
         should.fail();
       } catch (e) {
-        e.should.be.an.instanceOf(InvalidTokenError);
+        e.should.be.an.instanceOf(ExpiredTokenError);
         e.message.should.equal('Invalid token: access token has expired');
       }
     });
