@@ -22,6 +22,7 @@ exports.AccessDeniedError = require('./lib/errors/access-denied-error');
 exports.InsufficientScopeError = require('./lib/errors/insufficient-scope-error');
 exports.InvalidArgumentError = require('./lib/errors/invalid-argument-error');
 exports.InvalidClientError = require('./lib/errors/invalid-client-error');
+exports.InvalidUserError = require('./lib/errors/invalid-user-error');
 exports.InvalidGrantError = require('./lib/errors/invalid-grant-error');
 exports.InvalidRequestError = require('./lib/errors/invalid-request-error');
 exports.InvalidScopeError = require('./lib/errors/invalid-scope-error');
