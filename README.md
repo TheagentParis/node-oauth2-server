@@ -27,6 +27,141 @@ The *oauth2-server* module is framework-agnostic but there are several officiall
 - Fully [RFC 6749](https://tools.ietf.org/html/rfc6749.html) and [RFC 6750](https://tools.ietf.org/html/rfc6750.html) compliant.
 - Implicitly supports any form of storage, e.g. *PostgreSQL*, *MySQL*, *MongoDB*, *Redis*, etc.
 - Complete [test suite](https://github.com/oauthjs/node-oauth2-server/tree/master/test).
+- **API Key and Basic Authentication** support for direct authentication without Bearer tokens.
+
+
+## API Key & Basic Authentication
+
+In addition to standard OAuth2 Bearer token authentication, this module supports **API Key** and **Basic Authentication** for direct resource access without requiring a token exchange flow.
+
+### API Key Authentication
+
+Authenticate requests using an API key sent via header, query parameter, or cookie.
+
+**Configuration:**
+
+```javascript
+var OAuth2Server = require('oauth2-server');
+
+var oauth = new OAuth2Server({
+  model: model,
+  // Enable API Key in header (recommended)
+  allowApiKeyInHeader: 'X-API-Key',
+  // Or in query string (less secure - logged in URLs)
+  allowApiKeyInQuery: 'api_key',
+  // Or in cookie
+  allowApiKeyInCookie: 'api_key'
+});
+```
+
+**Required Model Method:**
+
+```javascript
+model.getAccessTokenFromApiKey = async function(apiKey) {
+  const record = await db.apiKeys.findOne({ key: apiKey, active: true });
+  if (!record) return null;
+
+  return {
+    accessToken: apiKey,
+    accessTokenExpiresAt: record.expiresAt || new Date('2099-12-31'),
+    scope: record.scope,
+    client: record.client,
+    user: record.user  // REQUIRED
+  };
+};
+```
+
+**Usage:**
+
+```bash
+# Header (recommended)
+curl -X GET http://localhost/api/resource \
+  -H "X-API-Key: ak_live_abc123"
+
+# Query string
+curl -X GET "http://localhost/api/resource?api_key=ak_live_abc123"
+```
+
+### Basic Authentication
+
+Authenticate requests using HTTP Basic Authentication (username:password).
+
+**Configuration:**
+
+```javascript
+var oauth = new OAuth2Server({
+  model: model,
+  allowBasicAuthentication: true
+});
+```
+
+**Required Model Method:**
+
+```javascript
+model.getAccessTokenFromBasicAuth = async function(username, password) {
+  const user = await db.users.findOne({ username });
+  if (!user || !await bcrypt.compare(password, user.passwordHash)) {
+    return null;
+  }
+
+  return {
+    accessToken: `basic-session-${user.id}`,
+    accessTokenExpiresAt: new Date(Date.now() + 3600000), // 1 hour
+    scope: user.defaultScope,
+    client: { id: 'basic-auth-client' },
+    user: user  // REQUIRED
+  };
+};
+```
+
+**Usage:**
+
+```bash
+# Base64 encode credentials: echo -n "username:password" | base64
+curl -X GET http://localhost/api/resource \
+  -H "Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+```
+
+### Combined Authentication
+
+You can enable multiple authentication methods simultaneously. Bearer tokens always work alongside these methods.
+
+```javascript
+var oauth = new OAuth2Server({
+  model: model,
+  allowApiKeyInHeader: 'X-API-Key',
+  allowBasicAuthentication: true
+});
+
+// Authenticate endpoint - accepts Bearer, API Key, or Basic
+app.use('/api', function(req, res, next) {
+  oauth.authenticate(new Request(req), new Response(res))
+    .then(function(token) {
+      req.user = token.user;
+      next();
+    })
+    .catch(function(err) {
+      res.status(err.code || 500).json({ error: err.message });
+    });
+});
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `allowApiKeyInHeader` | `string\|false` | `false` | Header name for API key (e.g., `'X-API-Key'`) |
+| `allowApiKeyInQuery` | `string\|false` | `false` | Query parameter name for API key |
+| `allowApiKeyInCookie` | `string\|false` | `false` | Cookie name for API key |
+| `allowBasicAuthentication` | `boolean` | `false` | Enable HTTP Basic Authentication |
+
+### Security Considerations
+
+1. **API Keys should be treated like passwords** - store hashed when possible
+2. **Basic Auth credentials are only base64 encoded, not encrypted** - always use HTTPS
+3. **API Keys in query strings are logged by web servers** - prefer headers
+4. **Implement rate limiting** at the application level
+5. **Scope verification** works the same for all authentication methods
 
 
 ## Documentation

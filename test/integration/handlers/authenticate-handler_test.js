@@ -269,7 +269,7 @@ describe('AuthenticateHandler integration', function() {
 
       var bearerToken = handler.getTokenFromRequestHeader(request);
 
-      bearerToken.should.equal('foo');
+      bearerToken.should.eql({ type: 'bearer', value: 'foo' });
     });
   });
 
@@ -290,7 +290,7 @@ describe('AuthenticateHandler integration', function() {
     it('should return the bearer token if `allowBearerTokensInQueryString` is true', function() {
       var handler = new AuthenticateHandler({ allowBearerTokensInQueryString: true, model: { getAccessToken: function() {} } });
 
-      handler.getTokenFromRequestQuery({ query: { access_token: 'foo' } }).should.equal('foo');
+      handler.getTokenFromRequestQuery({ query: { access_token: 'foo' } }).should.eql({ type: 'bearer', value: 'foo' });
     });
   });
 
@@ -342,7 +342,7 @@ describe('AuthenticateHandler integration', function() {
         query: {}
       });
 
-      handler.getTokenFromRequestBody(request).should.equal('foo');
+      handler.getTokenFromRequestBody(request).should.eql({ type: 'bearer', value: 'foo' });
     });
   });
 
